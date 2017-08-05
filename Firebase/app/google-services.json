@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "186185633082",
+    "firebase_url": "https://fir-fbbcf.firebaseio.com",
+    "project_id": "fir-fbbcf",
+    "storage_bucket": "fir-fbbcf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:186185633082:android:4217959c35e337d8",
+        "android_client_info": {
+          "package_name": "com.cleveroad.nikita_frolov_cr.firebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "186185633082-rf7s30krjee81tggru4hfdlcp6e3t70k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cleveroad.nikita_frolov_cr.firebase",
+            "certificate_hash": "6f0d4ee7b0d49feac0c55cbf817c74343b1cdef6"
+          }
+        },
+        {
+          "client_id": "186185633082-7t6ghtm5d9kcf17setgpa5q6rbhb7mv7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs_Oj8R-nKsHQ4GnNOX0-BuY7DsZu4nhY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "186185633082-7t6ghtm5d9kcf17setgpa5q6rbhb7mv7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
