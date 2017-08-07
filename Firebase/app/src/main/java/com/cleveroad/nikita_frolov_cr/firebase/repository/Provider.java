@@ -4,15 +4,15 @@ import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
 
 import java.util.List;
 
-public interface LocalPhotoRepository {
+public interface Provider {
 
-    Long addPhoto(Photo photo);
+    List<Photo> getAllPhotos();
 
     Photo getPhoto(long id);
 
-    void addPhotos(List<Photo> photos);
-
-    List<Photo> getPhotos();
-
     void removePhoto(long id);
+
+    void uploadPhoto(Photo photo);
+
+    void addPhoto(Photo photo);
 }
