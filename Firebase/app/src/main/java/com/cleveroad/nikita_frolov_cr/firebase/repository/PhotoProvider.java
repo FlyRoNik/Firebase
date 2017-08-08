@@ -4,7 +4,7 @@ import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
 
 import java.util.List;
 
-public interface Provider {
+public interface PhotoProvider {
 
     List<Photo> getAllPhotos();
 

@@ -1,15 +1,25 @@
 package com.cleveroad.nikita_frolov_cr.firebase.data.model;
 
 import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
 import com.google.android.gms.maps.model.LatLng;
 
 @Table(name = "photo")
 public class Photo extends Model{
+    @Column(name = "photoPath")
     private String photoPath;
+
+    @Column(name = "latitude")
     private double latitude;
+
+    @Column(name = "longitude")
     private double longitude;
+
+    @Column(name = "idLink")
     private String idLink;
+
+    @Column(name = "link")
     private String link;
 
     public String getPhotoPath() {

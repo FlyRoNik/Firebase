@@ -33,6 +33,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
     compile 'com.android.support:support-v4:26.+'
+    compile 'com.android.support:design:26.+'
     testCompile 'junit:junit:4.12'
 }
 

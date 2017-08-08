@@ -3,8 +3,9 @@ package com.cleveroad.nikita_frolov_cr.firebase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment;
+
 import static com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment.OnFragmentPhotoListener;
-import static com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment.newInstance;
 
 public class MainActivity extends AppCompatActivity implements OnFragmentPhotoListener {
 
@@ -13,10 +14,12 @@ public class MainActivity extends AppCompatActivity implements OnFragmentPhotoLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+//        deleteDatabase("photoDB");
+
         if(savedInstanceState == null){
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.llContainer, newInstance())
+                    .add(R.id.llContainer, PhotoFragment.newInstance())
                     .commit();
         }
     }

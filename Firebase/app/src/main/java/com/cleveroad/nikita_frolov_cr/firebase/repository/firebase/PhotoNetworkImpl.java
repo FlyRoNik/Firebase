@@ -2,9 +2,10 @@ package com.cleveroad.nikita_frolov_cr.firebase.repository.firebase;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
 
 import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.RemotePhotoRepository;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoNetwork;
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -22,9 +23,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Objects;
 
-public class RemotePhotoRepositoryImpl implements RemotePhotoRepository {
+public class PhotoNetworkImpl implements PhotoNetwork {
     private static final String KEY_ID_LINK = "name";
     private static final String MEDIA_LINK = "mediaLink";
     private static final String ALL_PHOTO_URI = "https://fir-fbbcf.firebaseio.com/";
@@ -39,8 +39,7 @@ public class RemotePhotoRepositoryImpl implements RemotePhotoRepository {
             URL url = new URL(ALL_PHOTO_URI + "photo.json");
 
             String link = uploadImage(photo.getPhotoPath());
-
-            if (!Objects.equals(link, "")) {
+            if (!TextUtils.isEmpty(link)) {
                 photo.setLink(link);
 
                 Gson gson = new Gson();
