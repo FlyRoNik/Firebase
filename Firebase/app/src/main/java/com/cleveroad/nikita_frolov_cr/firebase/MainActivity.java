@@ -32,6 +32,12 @@ public class MainActivity extends AppCompatActivity implements OnFragmentPhotoLi
     }
 
     @Override
+    public void goToPreviewFragment(String path, long id) {
+        goToFragment(PhotoPreviewFragment.newInstance(path, id),
+                PhotoPreviewFragment.class.getSimpleName());
+    }
+
+    @Override
     public void goToMapFragment() {
         goToFragment(MapFragment.newInstance(),
                 MapFragment.class.getSimpleName());

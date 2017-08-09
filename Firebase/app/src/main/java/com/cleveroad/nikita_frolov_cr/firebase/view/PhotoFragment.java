@@ -6,8 +6,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -15,9 +18,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,20 +31,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
-import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.DataProvider;
-import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
 import com.cleveroad.nikita_frolov_cr.firebase.view.adapter.PhotoRVAdapter;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
 public class PhotoFragment extends Fragment implements View.OnClickListener,
-        LoaderManager.LoaderCallbacks<List<Photo>>{
+        LoaderManager.LoaderCallbacks<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>>,
+        OnAdapterClickListener {
 
+    static final int REQUEST_TAKE_PHOTO = 1;
 
     private static final int CAMERA_RESULT = 1;
 
@@ -53,6 +62,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
     private RecyclerView rvPhotos;
     private PhotoRVAdapter mPhotoRVAdapter;
     private OnFragmentPhotoListener mListener;
+    private String mCurrentPhotoPath;
     private ContentObserver mContentObserver = new ContentObserver(new Handler()) {
         @Override
         public boolean deliverSelfNotifications() {
@@ -99,7 +109,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         setHasOptionsMenu(true);
 
         rvPhotos = view.findViewById(R.id.rvPhotos);
-        mPhotoRVAdapter = new PhotoRVAdapter();
+        mPhotoRVAdapter = new PhotoRVAdapter(this);
         rvPhotos.setLayoutManager(new GridLayoutManager(getContext(), 3));
         rvPhotos.setAdapter(mPhotoRVAdapter);
 
@@ -148,12 +158,80 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CAMERA_RESULT && resultCode == RESULT_OK) {
-            //TODO fix size photo
 
-            Bitmap image = (Bitmap) data.getExtras().get("data");
-            Uri tempUri = ImageHelper.getImageUri(getActivity().getApplicationContext(), image);
-            String imagePath = ImageHelper.getRealPathFromURI(tempUri);
-            mListener.goToPreviewFragment(imagePath);
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            int width = displayMetrics.widthPixels;
+            int height = displayMetrics.heightPixels;
+
+            decodeSampledBitmapFromResource(mCurrentPhotoPath, width, height);
+
+            mListener.goToPreviewFragment(mCurrentPhotoPath);
+        }
+    }
+
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeSampledBitmapFromResource(String imagePath,
+                                                         int reqWidth, int reqHeight) {
+
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(imagePath, options);
+
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFile(imagePath, options);
+    }
+
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = App.get().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File file = File.createTempFile(
+                imageFileName,
+                ".jpg",
+                storageDir);
+        mCurrentPhotoPath = file.getAbsolutePath();
+        return file;
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(App.get().getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                Toast.makeText(getContext(), "ACTION_IMAGE_CAPTURE Denied", Toast.LENGTH_SHORT)
+                        .show();
+            }
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getContext(),
+                        "com.cleveroad.nikita_frolov_cr.firebase.provider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            }
         }
     }
 
@@ -165,7 +243,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
                     PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
             return;
         }
-        makePhoto();
+        dispatchTakePictureIntent();
     }
 
     @Override
@@ -174,7 +252,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         switch (requestCode) {
             case PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    makePhoto();
+                    dispatchTakePictureIntent();
                 } else {
                     Toast.makeText(getContext(), "WRITE_EXTERNAL_STORAGE Denied", Toast.LENGTH_SHORT)
                             .show();
@@ -185,42 +263,45 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         }
     }
 
-    private void makePhoto() {
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(cameraIntent, CAMERA_RESULT);
-    }
-
     @Override
-    public Loader<List<Photo>> onCreateLoader(int id, Bundle args) {
+    public Loader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> onCreateLoader(int id, Bundle args) {
         return new PhotosATLoader(getContext());
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Photo>> loader, List<Photo> data) {
+    public void onLoadFinished(Loader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> loader, List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo> data) {
         mPhotoRVAdapter.setPhotos(data);
     }
 
     @Override
-    public void onLoaderReset(Loader<List<Photo>> loader) {
+    public void onLoaderReset(Loader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> loader) {
 
     }
 
-    private static class PhotosATLoader extends AsyncTaskLoader<List<Photo>> {
+    @Override
+    public void onClick(String imagePath, long id) {
+        mListener.goToPreviewFragment(imagePath, id);
+    }
 
-
+    private static class PhotosATLoader extends AsyncTaskLoader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> {
         PhotosATLoader(Context context) {
             super(context);
-
         }
 
         @Override
-        public List<Photo> loadInBackground() {
+        public List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo> loadInBackground() {
             return DataProvider.getPhotoProvider().getAllPhotos();
         }
     }
 
     public interface OnFragmentPhotoListener {
         void goToPreviewFragment(String path);
+        void goToPreviewFragment(String path, long id);
         void goToMapFragment();
     }
+
+    public interface OnItemClickListener {
+        void onClick(int position);
+    }
+
 }

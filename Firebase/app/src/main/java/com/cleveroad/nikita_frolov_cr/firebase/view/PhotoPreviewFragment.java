@@ -20,6 +20,7 @@ import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.DataProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.PhotoProviderImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
 import com.google.android.gms.maps.model.LatLng;
@@ -27,12 +28,14 @@ import com.google.android.gms.maps.model.LatLng;
 public class PhotoPreviewFragment extends Fragment implements LocationListener, View.OnClickListener {
     public static final String IMAGE_PATH_KEY = "imagePath";
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    private Button bUploadPhoto;
+    public static final String PHOTO_ID_KEY = "photoKey";
 
     private enum TypeMethod {
         PROVIDER_ADD_PHOTO,
         PROVIDER_UPLOAD_PHOTO;
     }
+
+    private Button bUploadPhoto;
 
     private LocationManager mLocationManager;
     private boolean mLoadLocation;
@@ -41,9 +44,13 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     @Override
     public void onLocationChanged(Location location) {
         if (mLoadLocation) {
-            mPhoto = new Photo();
-            String imagePath = getArguments().getString(IMAGE_PATH_KEY);
-            mPhoto.setPhotoPath(imagePath);
+            if(!getArguments().containsKey(PHOTO_ID_KEY)){
+                mPhoto = new Photo();
+                String imagePath = getArguments().getString(IMAGE_PATH_KEY);
+                mPhoto.setPhotoPath(imagePath);
+            }else {
+                mPhoto = DataProvider.getPhotoProvider().getPhoto(getArguments().getLong(PHOTO_ID_KEY));
+            }
             mPhoto.setLatitude(new LatLng(location.getLatitude(), location.getLongitude()));
             new ProviderAsyncTask(TypeMethod.PROVIDER_ADD_PHOTO).execute(mPhoto);
             mLoadLocation = false;
@@ -67,9 +74,16 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     }
 
     public static PhotoPreviewFragment newInstance(String path) {
+        return newInstance(path, 0);
+    }
+
+    public static PhotoPreviewFragment newInstance(String path, long id) {
         PhotoPreviewFragment fragment = new PhotoPreviewFragment();
         Bundle args = new Bundle();
         args.putString(IMAGE_PATH_KEY, path);
+        if (id > 0) {
+            args.putLong(PHOTO_ID_KEY, id);
+        }
         fragment.setArguments(args);
         return fragment;
     }
@@ -108,6 +122,12 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     public void onAttach(Context context) {
         super.onAttach(context);
         mLoadLocation = false;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mLocationManager.removeUpdates(this);
     }
 
     @Override

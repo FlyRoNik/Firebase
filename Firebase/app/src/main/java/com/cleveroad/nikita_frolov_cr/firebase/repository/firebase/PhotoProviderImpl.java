@@ -48,8 +48,12 @@ public class PhotoProviderImpl implements PhotoProvider {
 
     @Override
     public void uploadPhoto(Photo photo) {
+        photo.setLink("loading...");//TODO wtf?
+        photo.save();
+        App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
         photo = mPhotoNetwork.uploadPhoto(photo);
         photo.save();
+        App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
     }
 
 

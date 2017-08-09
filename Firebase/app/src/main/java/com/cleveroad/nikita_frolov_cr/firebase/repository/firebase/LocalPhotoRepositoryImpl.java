@@ -1,6 +1,7 @@
 package com.cleveroad.nikita_frolov_cr.firebase.repository.firebase;
 
 import com.activeandroid.ActiveAndroid;
+import com.activeandroid.Model;
 import com.activeandroid.query.Select;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.LocalPhotoRepository;
@@ -23,10 +24,7 @@ public class LocalPhotoRepositoryImpl implements LocalPhotoRepository{
     public void addPhotos(List<Photo> photos) {
         ActiveAndroid.beginTransaction();
         try {
-            for (Photo photo :
-                    photos) {
-                photo.save();
-            }
+            photos.forEach(Model::save);
             ActiveAndroid.setTransactionSuccessful();
         } finally {
             ActiveAndroid.endTransaction();
