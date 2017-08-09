@@ -1,7 +1,5 @@
 package com.cleveroad.nikita_frolov_cr.firebase.view.adapter;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -11,6 +9,7 @@ import android.widget.ImageView;
 
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
+import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,9 +64,7 @@ public class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoVie
         }
 
         void bindPhoto(Photo photo) {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            ivPhoto.setImageBitmap(BitmapFactory.decodeFile(photo.getPhotoPath(), options));
+            ivPhoto.setImageBitmap(ImageHelper.getBitMapFromPath(photo.getPhotoPath()));
         }
     }
 }

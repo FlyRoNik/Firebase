@@ -54,4 +54,20 @@ public class Photo extends Model{
     public void setLink(String link) {
         this.link = link;
     }
+
+    public PhotoJson getModelJson(){
+        PhotoJson photoJson = new PhotoJson();
+        photoJson.photoPath = photoPath;
+        photoJson.latitude = latitude;
+        photoJson.longitude = longitude;
+        photoJson.link = link;
+        return photoJson;
+    }
+
+    private class PhotoJson{
+        private String photoPath;
+        private double latitude;
+        private double longitude;
+        private String link;
+    }
 }

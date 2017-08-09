@@ -41,9 +41,7 @@ public class PhotoNetworkImpl implements PhotoNetwork {
             String link = uploadImage(photo.getPhotoPath());
             if (!TextUtils.isEmpty(link)) {
                 photo.setLink(link);
-
-                Gson gson = new Gson();
-                String photoJSON = gson.toJsonTree(photo).getAsString();
+                String photoJSON = new Gson().toJson(photo.getModelJson());
 
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -88,7 +86,7 @@ public class PhotoNetworkImpl implements PhotoNetwork {
     }
 
     private String getUrlForAddImg(String imgName){
-        return ADD_IMG_BUCKET_URI + "/o?uploadType=media&name=" + imgName;
+        return ADD_IMG_BUCKET_URI + imgName;
     }
 
     private Bitmap getImageFromPath(String imagePath) {

@@ -1,0 +1,23 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.cleveroad.nikita_frolov_cr.firebase.view.PhotoPreviewFragment">
+
+    <ImageView
+        android:id="@+id/ivPreviewPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="1"
+        android:scaleType="centerCrop"
+        tools:ignore="ContentDescription" />
+
+    <Button
+        android:id="@+id/bUploadPhoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_margin="@dimen/photo_preview_image_view_margin"
+        android:text="@string/upload_photo" />
+
+</FrameLayout>

@@ -6,10 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
@@ -31,17 +29,16 @@ import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.PhotoProviderImpl;
+import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
 import com.cleveroad.nikita_frolov_cr.firebase.view.adapter.PhotoRVAdapter;
-import com.google.android.gms.maps.model.LatLng;
 
-import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
 public class PhotoFragment extends Fragment implements View.OnClickListener,
         LoaderManager.LoaderCallbacks<List<Photo>>{
-    private static final int PROVIDER_ADD_PHOTO = 1;
+
 
     private static final int CAMERA_RESULT = 1;
 
@@ -133,46 +130,20 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        //TODO mListener.goToFragment();
         if (requestCode == CAMERA_RESULT && resultCode == RESULT_OK) {
             //TODO fix size photo
             Bitmap image = (Bitmap) data.getExtras().get("data");
-
-            Photo photo = new Photo();
-            Uri tempUri = getImageUri(getActivity().getApplicationContext(), image);
-            String imagePath = getRealPathFromURI(tempUri);
-            photo.setPhotoPath(imagePath);
-            //TODO get location
-            photo.setLatitude(new LatLng(2.3,4.4));
-            new ProviderAsyncTask(PROVIDER_ADD_PHOTO, getActivity().getContentResolver()).execute(photo);
+            Uri tempUri = ImageHelper.getImageUri(getActivity().getApplicationContext(), image);
+            String imagePath = ImageHelper.getRealPathFromURI(tempUri);
+            mListener.goToPreviewFragment(imagePath);
         }
-    }
-
-    public Uri getImageUri(Context inContext, Bitmap inImage) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, null, null);
-        return Uri.parse(path);
-    }
-
-    public String getRealPathFromURI(Uri uri) {
-        Cursor cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
-        String result = "";
-        if (cursor != null) {
-            cursor.moveToFirst();
-            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            result = cursor.getString(idx);
-            cursor.close();
-        }
-        return result;
     }
 
     private void makePhotoWrapper() {
         int hasWriteContactsPermission = ContextCompat.checkSelfPermission(getActivity(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {Manifest.permission.WRITE_CONTACTS},
+            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
             return;
         }
@@ -230,28 +201,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         }
     }
 
-    private static class ProviderAsyncTask extends AsyncTask<Photo, Void, Void> {
-        private int mTypeCommand;
-        private PhotoProvider mPhotoProvider;
-
-        ProviderAsyncTask(int typeCommand, ContentResolver contentResolver) {
-            mTypeCommand = typeCommand;
-            mPhotoProvider = new PhotoProviderImpl(contentResolver);
-        }
-
-        @Override
-        protected Void doInBackground(Photo... photos) {
-            switch (mTypeCommand) {
-                case PROVIDER_ADD_PHOTO:
-                    mPhotoProvider.addPhoto(photos[0]);
-                    break;
-                default:
-            }
-            return null;
-        }
-    }
-
     public interface OnFragmentPhotoListener {
-        void goToFragment();
+        void goToPreviewFragment(String path);
     }
 }
