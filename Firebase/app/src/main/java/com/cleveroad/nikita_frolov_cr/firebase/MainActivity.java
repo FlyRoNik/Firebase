@@ -4,11 +4,11 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 
+import com.cleveroad.nikita_frolov_cr.firebase.view.MapFragment;
 import com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment;
 import com.cleveroad.nikita_frolov_cr.firebase.view.PhotoPreviewFragment;
 
 import static com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment.OnFragmentPhotoListener;
-import static com.cleveroad.nikita_frolov_cr.firebase.view.PhotoPreviewFragment.newInstance;
 
 public class MainActivity extends AppCompatActivity implements OnFragmentPhotoListener {
 
@@ -20,17 +20,21 @@ public class MainActivity extends AppCompatActivity implements OnFragmentPhotoLi
 //        deleteDatabase("photoDB");
 
         if(savedInstanceState == null){
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.llContainer, PhotoFragment.newInstance())
-                    .commit();
+            goToFragment(PhotoFragment.newInstance(),
+                    PhotoFragment.class.getSimpleName());
         }
     }
 
     @Override
     public void goToPreviewFragment(String path) {
-        goToFragment(newInstance(path),
+        goToFragment(PhotoPreviewFragment.newInstance(path),
                 PhotoPreviewFragment.class.getSimpleName());
+    }
+
+    @Override
+    public void goToMapFragment() {
+        goToFragment(MapFragment.newInstance(),
+                MapFragment.class.getSimpleName());
     }
 
     private void goToFragment(Fragment fragment, String tag) {

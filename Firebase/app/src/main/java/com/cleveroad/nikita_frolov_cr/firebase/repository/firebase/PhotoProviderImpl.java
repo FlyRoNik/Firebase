@@ -1,13 +1,13 @@
 package com.cleveroad.nikita_frolov_cr.firebase.repository.firebase;
 
-import android.content.ContentResolver;
 import android.net.Uri;
 
+import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
-import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
+import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.LocalPhotoRepository;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoNetwork;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
 
 import java.util.List;
 
@@ -17,12 +17,10 @@ public class PhotoProviderImpl implements PhotoProvider {
 
     private LocalPhotoRepository mLocalPhotoRepository;
     private PhotoNetwork mPhotoNetwork;
-    private ContentResolver mContentResolver;
 
-    public PhotoProviderImpl(ContentResolver contentResolver) {
+    public PhotoProviderImpl() {
         mLocalPhotoRepository = new LocalPhotoRepositoryImpl();
         mPhotoNetwork = new PhotoNetworkImpl();
-        mContentResolver = contentResolver;
     }
 
     @Override
@@ -38,13 +36,13 @@ public class PhotoProviderImpl implements PhotoProvider {
     @Override
     public void addPhoto(Photo photo) {
         mLocalPhotoRepository.addPhoto(photo);
-        mContentResolver.notifyChange(PHOTO_UPDATE_URI, null);
+        App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
     }
 
     @Override
     public void removePhoto(long id) {
         mLocalPhotoRepository.removePhoto(id);
-        mContentResolver.notifyChange(PHOTO_UPDATE_URI, null);
+        App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
     }
 
 

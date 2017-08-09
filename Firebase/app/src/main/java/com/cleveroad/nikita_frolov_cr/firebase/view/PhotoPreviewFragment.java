@@ -1,7 +1,6 @@
 package com.cleveroad.nikita_frolov_cr.firebase.view;
 
 import android.Manifest;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -19,7 +18,7 @@ import android.widget.ImageView;
 
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
-import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
+import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.PhotoProviderImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
@@ -46,8 +45,7 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
             String imagePath = getArguments().getString(IMAGE_PATH_KEY);
             mPhoto.setPhotoPath(imagePath);
             mPhoto.setLatitude(new LatLng(location.getLatitude(), location.getLongitude()));
-            new ProviderAsyncTask(TypeMethod.PROVIDER_ADD_PHOTO,
-                    App.get().getContentResolver()).execute(mPhoto);
+            new ProviderAsyncTask(TypeMethod.PROVIDER_ADD_PHOTO).execute(mPhoto);
             mLoadLocation = false;
             bUploadPhoto.setEnabled(true);
         }
@@ -116,8 +114,7 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.bUploadPhoto:
-                new ProviderAsyncTask(TypeMethod.PROVIDER_UPLOAD_PHOTO,
-                        App.get().getContentResolver()).execute(mPhoto);
+                new ProviderAsyncTask(TypeMethod.PROVIDER_UPLOAD_PHOTO).execute(mPhoto);
                 getFragmentManager().popBackStackImmediate();
                 break;
             default:
@@ -128,9 +125,9 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         private TypeMethod mTypeMethod;
         private PhotoProvider mPhotoProvider;
 
-        ProviderAsyncTask(TypeMethod typeMethod, ContentResolver contentResolver) {
+        ProviderAsyncTask(TypeMethod typeMethod) {
             mTypeMethod = typeMethod;
-            mPhotoProvider = new PhotoProviderImpl(contentResolver);
+            mPhotoProvider = new PhotoProviderImpl();
         }
 
         @Override

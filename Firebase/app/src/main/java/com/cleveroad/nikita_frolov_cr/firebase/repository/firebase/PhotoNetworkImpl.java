@@ -4,9 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 
-import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
+import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoNetwork;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,11 +42,14 @@ public class PhotoNetworkImpl implements PhotoNetwork {
             String link = uploadImage(photo.getPhotoPath());
             if (!TextUtils.isEmpty(link)) {
                 photo.setLink(link);
-                String photoJSON = new Gson().toJson(photo.getModelJson());
+                Gson gson = new GsonBuilder()
+                        .excludeFieldsWithoutExposeAnnotation()
+                        .create();
+                String photoJSON = gson.toJson(photo);
 
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
-                connection.setDoOutput(true);
+                connection.setDoInput(true);
                 connection.setDoOutput(true);
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.connect();

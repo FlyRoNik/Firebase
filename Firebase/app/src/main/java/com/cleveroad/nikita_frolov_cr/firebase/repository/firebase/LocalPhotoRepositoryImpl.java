@@ -2,7 +2,7 @@ package com.cleveroad.nikita_frolov_cr.firebase.repository.firebase;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.query.Select;
-import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
+import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.LocalPhotoRepository;
 
 import java.util.List;

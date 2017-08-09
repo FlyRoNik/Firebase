@@ -1,7 +1,6 @@
 package com.cleveroad.nikita_frolov_cr.firebase.view;
 
 import android.Manifest;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -20,15 +19,17 @@ import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
-import com.cleveroad.nikita_frolov_cr.firebase.data.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.PhotoProviderImpl;
+import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.DataProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
 import com.cleveroad.nikita_frolov_cr.firebase.view.adapter.PhotoRVAdapter;
 
@@ -44,7 +45,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
 
     private static final int LOADER_MANAGER_ID = 1;
 
-    public static final int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
+    private static final int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
     private static final Uri PHOTO_UPDATE_URI = Uri.parse("content://"
             + BuildConfig.APPLICATION_ID + ".photoDB/photo");
@@ -52,7 +53,6 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
     private RecyclerView rvPhotos;
     private PhotoRVAdapter mPhotoRVAdapter;
     private OnFragmentPhotoListener mListener;
-    private PhotoProvider mPhotoProvider;
     private ContentObserver mContentObserver = new ContentObserver(new Handler()) {
         @Override
         public boolean deliverSelfNotifications() {
@@ -96,12 +96,13 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         View view = inflater.inflate(R.layout.fragment_photo, container, false);
         view.findViewById(R.id.bAddPhoto).setOnClickListener(this);
 
+        setHasOptionsMenu(true);
+
         rvPhotos = view.findViewById(R.id.rvPhotos);
         mPhotoRVAdapter = new PhotoRVAdapter();
         rvPhotos.setLayoutManager(new GridLayoutManager(getContext(), 3));
         rvPhotos.setAdapter(mPhotoRVAdapter);
 
-        mPhotoProvider = new PhotoProviderImpl(getContext().getContentResolver());
         getLoaderManager().initLoader(LOADER_MANAGER_ID, null, this);
         getActivity().getContentResolver()
                 .registerContentObserver(PHOTO_UPDATE_URI, true, mContentObserver);
@@ -115,6 +116,22 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         getActivity().getContentResolver()
                 .unregisterContentObserver(mContentObserver);
         mListener = null;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.iGoToMap:
+                    mListener.goToMapFragment();
+                return true;
+            default:
+        }
+        return false;
     }
 
     @Override
@@ -132,6 +149,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CAMERA_RESULT && resultCode == RESULT_OK) {
             //TODO fix size photo
+
             Bitmap image = (Bitmap) data.getExtras().get("data");
             Uri tempUri = ImageHelper.getImageUri(getActivity().getApplicationContext(), image);
             String imagePath = ImageHelper.getRealPathFromURI(tempUri);
@@ -174,7 +192,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
 
     @Override
     public Loader<List<Photo>> onCreateLoader(int id, Bundle args) {
-        return new PhotosATLoader(getContext(), getActivity().getContentResolver());
+        return new PhotosATLoader(getContext());
     }
 
     @Override
@@ -188,20 +206,21 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
     }
 
     private static class PhotosATLoader extends AsyncTaskLoader<List<Photo>> {
-        private PhotoProvider mPhotoProvider;
 
-        PhotosATLoader(Context context, ContentResolver contentResolver) {
+
+        PhotosATLoader(Context context) {
             super(context);
-            mPhotoProvider = new PhotoProviderImpl(contentResolver);
+
         }
 
         @Override
         public List<Photo> loadInBackground() {
-            return mPhotoProvider.getAllPhotos();
+            return DataProvider.getPhotoProvider().getAllPhotos();
         }
     }
 
     public interface OnFragmentPhotoListener {
         void goToPreviewFragment(String path);
+        void goToMapFragment();
     }
 }
