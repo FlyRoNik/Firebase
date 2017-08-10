@@ -11,10 +11,12 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
@@ -23,12 +25,20 @@ import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.DataProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.PhotoProviderImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
+import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONException;
+
+import java.io.IOException;
 
 public class PhotoPreviewFragment extends Fragment implements LocationListener, View.OnClickListener {
     public static final String IMAGE_PATH_KEY = "imagePath";
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     public static final String PHOTO_ID_KEY = "photoKey";
+    public static final String NETWORK_REQUEST_OK = "200OK";
+    private static final long FLAG_ONLY_PREVIEW = -1;
+    public static final String ONLY_PREVIEW_KEY = "onlyPreview";
 
     private enum TypeMethod {
         PROVIDER_ADD_PHOTO,
@@ -44,11 +54,11 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     @Override
     public void onLocationChanged(Location location) {
         if (mLoadLocation) {
-            if(!getArguments().containsKey(PHOTO_ID_KEY)){
+            if (!getArguments().containsKey(PHOTO_ID_KEY)) {
                 mPhoto = new Photo();
                 String imagePath = getArguments().getString(IMAGE_PATH_KEY);
                 mPhoto.setPhotoPath(imagePath);
-            }else {
+            } else {
                 mPhoto = DataProvider.getPhotoProvider().getPhoto(getArguments().getLong(PHOTO_ID_KEY));
             }
             mPhoto.setLatitude(new LatLng(location.getLatitude(), location.getLongitude()));
@@ -83,6 +93,10 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         args.putString(IMAGE_PATH_KEY, path);
         if (id > 0) {
             args.putLong(PHOTO_ID_KEY, id);
+        }else {
+            if (id == FLAG_ONLY_PREVIEW) {
+                args.putString(ONLY_PREVIEW_KEY, "onlyPreview");
+            }
         }
         fragment.setArguments(args);
         return fragment;
@@ -92,13 +106,20 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_photo_preview, container, false);
+        getActivity().setTitle("PreviewPhoto");
+        setHasOptionsMenu(true);
 
         bUploadPhoto = view.findViewById(R.id.bUploadPhoto);
         bUploadPhoto.setOnClickListener(this);
         bUploadPhoto.setEnabled(false);
 
-        mLocationManager = (LocationManager) App.get().getSystemService(Context.LOCATION_SERVICE);
-        uploadLocation();
+
+        if (!getArguments().containsKey(ONLY_PREVIEW_KEY)) {
+            mLocationManager = (LocationManager) App.get().getSystemService(Context.LOCATION_SERVICE);
+            uploadLocation();
+        } else {
+            bUploadPhoto.setVisibility(View.GONE);
+        }
 
         String imagePath = getArguments().getString(IMAGE_PATH_KEY);
         ((ImageView) view.findViewById(R.id.ivPreviewPhoto)).setImageBitmap(ImageHelper.getBitMapFromPath(imagePath));
@@ -127,7 +148,9 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     @Override
     public void onDetach() {
         super.onDetach();
-        mLocationManager.removeUpdates(this);
+        if (!getArguments().containsKey(ONLY_PREVIEW_KEY)) {
+            mLocationManager.removeUpdates(this);
+        }
     }
 
     @Override
@@ -141,7 +164,18 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         }
     }
 
-    private static class ProviderAsyncTask extends AsyncTask<Photo, Void, Void> {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getFragmentManager().popBackStackImmediate();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private static class ProviderAsyncTask extends AsyncTask<Photo, Void, String> {
         private TypeMethod mTypeMethod;
         private PhotoProvider mPhotoProvider;
 
@@ -151,17 +185,30 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         }
 
         @Override
-        protected Void doInBackground(Photo... photos) {
-            switch (mTypeMethod) {
-                case PROVIDER_ADD_PHOTO:
-                    mPhotoProvider.addPhoto(photos[0]);
-                    break;
-                case PROVIDER_UPLOAD_PHOTO:
-                    mPhotoProvider.uploadPhoto(photos[0]);
-                    break;
-                default:
+        protected String doInBackground(Photo... photos) {
+            try {
+                switch (mTypeMethod) {
+                    case PROVIDER_ADD_PHOTO:
+                        mPhotoProvider.addPhoto(photos[0]);
+                        break;
+                    case PROVIDER_UPLOAD_PHOTO:
+                        mPhotoProvider.uploadPhoto(photos[0]);
+                        break;
+                    default:
+                }
+            } catch (NetworkException | JSONException | IOException e) {
+                return e.getMessage();
             }
-            return null;
+            return NETWORK_REQUEST_OK;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (!s.equals(NETWORK_REQUEST_OK)) {
+                Toast.makeText(App.get(), s, Toast.LENGTH_SHORT)
+                        .show();
+            }
         }
     }
 }

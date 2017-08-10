@@ -6,6 +6,7 @@ import android.text.TextUtils;
 
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoNetwork;
+import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -34,9 +35,9 @@ public class PhotoNetworkImpl implements PhotoNetwork {
             BUCKET_URI + "/o?uploadType=media&name=";
 
     @Override
-    public Photo uploadPhoto(Photo photo) {
+    public Photo uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException {
         HttpURLConnection connection = null;
-        try{
+        try {
             URL url = new URL(ALL_PHOTO_URI + "photo.json");
 
             String link = uploadImage(photo.getPhotoPath());
@@ -54,15 +55,15 @@ public class PhotoNetworkImpl implements PhotoNetwork {
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.connect();
 
-                try(OutputStream outputStream = connection.getOutputStream()){
-                    try(BufferedWriter writer = new BufferedWriter(
+                try (OutputStream outputStream = connection.getOutputStream()) {
+                    try (BufferedWriter writer = new BufferedWriter(
                             new OutputStreamWriter(outputStream, "UTF-8"))) {
                         writer.write(photoJSON);
                     }
                 }
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     try (InputStream responseStream = connection.getInputStream()) {
-                        try(BufferedReader reader = new BufferedReader(
+                        try (BufferedReader reader = new BufferedReader(
                                 new InputStreamReader(responseStream, "UTF-8"))) {
                             StringBuilder response = new StringBuilder();
                             String line;
@@ -75,13 +76,10 @@ public class PhotoNetworkImpl implements PhotoNetwork {
                     }
 
                 } else {
-                    //TODO wtf??
-                    throw new IOException(String.valueOf(connection.getResponseCode()));
+                    throw new NetworkException(String.valueOf(connection.getResponseCode()));
                 }
             }
-        } catch (JSONException | IOException e) {
-            e.printStackTrace();
-        }finally {
+        } finally {
             if (connection != null) {
                 connection.disconnect();
             }
@@ -89,21 +87,21 @@ public class PhotoNetworkImpl implements PhotoNetwork {
         return null;
     }
 
-    private String getUrlForAddImg(String imgName){
+    private String getUrlForAddImg(String imgName) {
         return ADD_IMG_BUCKET_URI + imgName;
     }
 
     private Bitmap getImageFromPath(String imagePath) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        return  BitmapFactory.decodeFile(imagePath, options);
+        return BitmapFactory.decodeFile(imagePath, options);
     }
 
-    private String uploadImage(String pathImage){
+    private String uploadImage(String pathImage) throws NetworkException, IOException {
         HttpURLConnection connection = null;
-        try{
+        try {
             Bitmap photo = getImageFromPath(pathImage);
-            String namePhoto = pathImage.substring(pathImage.lastIndexOf("/")+1);
+            String namePhoto = pathImage.substring(pathImage.lastIndexOf("/") + 1);
             URL url = new URL(getUrlForAddImg(namePhoto));
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
@@ -112,7 +110,7 @@ public class PhotoNetworkImpl implements PhotoNetwork {
             connection.setRequestProperty("Content-Type", "image/jpeg");
             connection.connect();
 
-            try(DataOutputStream request = new DataOutputStream(connection.getOutputStream())) {
+            try (DataOutputStream request = new DataOutputStream(connection.getOutputStream())) {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                 request.write(stream.toByteArray());
@@ -136,12 +134,8 @@ public class PhotoNetworkImpl implements PhotoNetwork {
                     }
                 }
             } else {
-                //TODO wtf??
-                throw new IOException(String.valueOf(connection.getResponseCode()));
+                throw new NetworkException(String.valueOf(connection.getResponseCode()));
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             if (connection != null) {
                 connection.disconnect();

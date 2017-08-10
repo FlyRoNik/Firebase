@@ -5,9 +5,10 @@ import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.annotations.Expose;
+import com.google.maps.android.clustering.ClusterItem;
 
 @Table(name = "photo")
-public class Photo extends Model{
+public class Photo extends Model implements ClusterItem {
     @Column(name = "photoPath")
     @Expose
     private String photoPath;
@@ -27,6 +28,20 @@ public class Photo extends Model{
     @Column(name = "link")
     @Expose
     private String link;
+
+    @Expose(deserialize = false, serialize = false)
+    private String title;
+
+    @Expose(deserialize = false, serialize = false)
+    private String snippet;
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setSnippet(String snippet) {
+        this.snippet = snippet;
+    }
 
     public String getPhotoPath() {
         return photoPath;
@@ -59,5 +74,20 @@ public class Photo extends Model{
 
     public void setLink(String link) {
         this.link = link;
+    }
+
+    @Override
+    public LatLng getPosition() {
+        return new LatLng(latitude, longitude);
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public String getSnippet() {
+        return snippet;
     }
 }

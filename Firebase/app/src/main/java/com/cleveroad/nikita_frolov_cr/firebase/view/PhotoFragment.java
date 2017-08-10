@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -39,8 +38,10 @@ import com.cleveroad.nikita_frolov_cr.firebase.view.adapter.PhotoRVAdapter;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -105,6 +106,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_photo, container, false);
         view.findViewById(R.id.bAddPhoto).setOnClickListener(this);
+        getActivity().setTitle("ListPhoto");
 
         setHasOptionsMenu(true);
 
@@ -164,47 +166,30 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
             int width = displayMetrics.widthPixels;
             int height = displayMetrics.heightPixels;
 
-            decodeSampledBitmapFromResource(mCurrentPhotoPath, width, height);
+            setPic(width, height);
+            galleryAddPic();
 
             mListener.goToPreviewFragment(mCurrentPhotoPath);
         }
     }
 
-    public static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
+    private void setPic(int reqWidth, int reqHeight) {
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+        int scaleFactor = Math.min(photoW/ reqWidth, photoH/ reqHeight);
 
-        if (height > reqHeight || width > reqWidth) {
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
 
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
-    }
-
-    public static Bitmap decodeSampledBitmapFromResource(String imagePath,
-                                                         int reqWidth, int reqHeight) {
-
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(imagePath, options);
-
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-
-        options.inJustDecodeBounds = false;
-        return BitmapFactory.decodeFile(imagePath, options);
+        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        MediaStore.Images.Media.insertImage(App.get().getContentResolver(), bitmap, null, null);
     }
 
     private File createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = App.get().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File file = File.createTempFile(
@@ -214,6 +199,15 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         mCurrentPhotoPath = file.getAbsolutePath();
         return file;
     }
+
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(mCurrentPhotoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        App.get().sendBroadcast(mediaScanIntent);
+    }
+
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);

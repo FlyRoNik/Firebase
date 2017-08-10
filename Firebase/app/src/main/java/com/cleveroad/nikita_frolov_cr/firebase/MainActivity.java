@@ -2,7 +2,9 @@ package com.cleveroad.nikita_frolov_cr.firebase;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.cleveroad.nikita_frolov_cr.firebase.view.MapFragment;
 import com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment;
@@ -18,6 +20,15 @@ public class MainActivity extends AppCompatActivity implements OnFragmentPhotoLi
         setContentView(R.layout.activity_main);
 
 //        deleteDatabase("photoDB");
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tToolbar);
+        setSupportActionBar(toolbar);
+
+        ActionBar ab = getSupportActionBar();
+
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+        }
 
         if(savedInstanceState == null){
             goToFragment(PhotoFragment.newInstance(),

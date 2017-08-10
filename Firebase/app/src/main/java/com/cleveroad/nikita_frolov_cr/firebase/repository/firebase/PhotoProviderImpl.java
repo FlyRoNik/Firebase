@@ -8,7 +8,11 @@ import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.LocalPhotoRepository;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoNetwork;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
+import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.List;
 
 public class PhotoProviderImpl implements PhotoProvider {
@@ -47,10 +51,7 @@ public class PhotoProviderImpl implements PhotoProvider {
 
 
     @Override
-    public void uploadPhoto(Photo photo) {
-        photo.setLink("loading...");//TODO wtf?
-        photo.save();
-        App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
+    public void uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException {
         photo = mPhotoNetwork.uploadPhoto(photo);
         photo.save();
         App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
