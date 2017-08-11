@@ -1,11 +1,10 @@
-package com.cleveroad.nikita_frolov_cr.firebase.repository.firebase;
+package com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.text.TextUtils;
 
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoNetwork;
+import com.cleveroad.nikita_frolov_cr.firebase.network.PhotoNetwork;
 import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,8 +15,9 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,7 +40,7 @@ public class PhotoNetworkImpl implements PhotoNetwork {
         try {
             URL url = new URL(ALL_PHOTO_URI + "photo.json");
 
-            String link = uploadImage(photo.getPhotoPath());
+            String link = uploadImage(photo.getPhotoUri());
             if (!TextUtils.isEmpty(link)) {
                 photo.setLink(link);
                 Gson gson = new GsonBuilder()
@@ -91,17 +91,11 @@ public class PhotoNetworkImpl implements PhotoNetwork {
         return ADD_IMG_BUCKET_URI + imgName;
     }
 
-    private Bitmap getImageFromPath(String imagePath) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        return BitmapFactory.decodeFile(imagePath, options);
-    }
-
-    private String uploadImage(String pathImage) throws NetworkException, IOException {
+    private String uploadImage(Uri uri) throws NetworkException, IOException {
         HttpURLConnection connection = null;
         try {
-            Bitmap photo = getImageFromPath(pathImage);
-            String namePhoto = pathImage.substring(pathImage.lastIndexOf("/") + 1);
+            String pathImage = uri.getPath();
+            String namePhoto = pathImage.substring(pathImage.lastIndexOf('/') + 1);
             URL url = new URL(getUrlForAddImg(namePhoto));
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
@@ -111,11 +105,18 @@ public class PhotoNetworkImpl implements PhotoNetwork {
             connection.connect();
 
             try (DataOutputStream request = new DataOutputStream(connection.getOutputStream())) {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                request.write(stream.toByteArray());
+                File file = new File(uri.getPath());
+                byte[] bytesArray = new byte[(int) file.length()];
+
+                try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                    while (true) {
+                        if (fileInputStream.read(bytesArray) == -1) break;
+                    }
+                }
+                request.write(bytesArray, 0, bytesArray.length);
                 request.flush();
             }
+
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 try (InputStream responseStream =

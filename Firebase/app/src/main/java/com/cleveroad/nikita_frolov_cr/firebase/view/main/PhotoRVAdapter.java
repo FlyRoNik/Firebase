@@ -1,4 +1,4 @@
-package com.cleveroad.nikita_frolov_cr.firebase.view.adapter;
+package com.cleveroad.nikita_frolov_cr.firebase.view.main;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -11,20 +11,17 @@ import android.widget.ImageView;
 
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
-import com.cleveroad.nikita_frolov_cr.firebase.view.OnAdapterClickListener;
-import com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder> implements
+class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder> implements
         PhotoFragment.OnItemClickListener {
     private List<Photo> mPhotos;
     private WeakReference<OnAdapterClickListener> mListenerReference;
 
-    public PhotoRVAdapter(@NonNull OnAdapterClickListener listener) {
+    PhotoRVAdapter(@NonNull OnAdapterClickListener listener) {
         this.mPhotos = new ArrayList<>();
         mListenerReference = new WeakReference<>(listener);
     }
@@ -33,7 +30,7 @@ public class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoVie
         return new ArrayList<>(mPhotos);
     }
 
-    public void setPhotos(List<Photo> photos) {
+    void setPhotos(List<Photo> photos) {
         mPhotos.clear();
         mPhotos.addAll(photos);
         notifyDataSetChanged();
@@ -66,7 +63,7 @@ public class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoVie
     public void onClick(int position) {
         if (mListenerReference != null && mListenerReference.get() != null) {
             Photo photo = mPhotos.get(position);
-            mListenerReference.get().onClick(photo.getPhotoPath(), photo.getId());
+            mListenerReference.get().onClick(photo.getPhotoUri(), photo.getId());
         }
     }
 
@@ -83,7 +80,7 @@ public class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoVie
         }
 
         void bindPhoto(Photo photo) {
-            ivPhoto.setImageBitmap(ImageHelper.getBitMapFromPath(photo.getPhotoPath()));
+            ivPhoto.setImageURI(photo.getPhotoUri());
             if(TextUtils.isEmpty(photo.getLink())){
                 ivPhoto.setAlpha(0.5f);
             }else {

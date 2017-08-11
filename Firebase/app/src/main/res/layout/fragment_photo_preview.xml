@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.cleveroad.nikita_frolov_cr.firebase.view.PhotoPreviewFragment">
+    tools:context="com.cleveroad.nikita_frolov_cr.firebase.view.preview.PhotoPreviewFragment">
 
     <ImageView
         android:id="@+id/ivPreviewPhoto"

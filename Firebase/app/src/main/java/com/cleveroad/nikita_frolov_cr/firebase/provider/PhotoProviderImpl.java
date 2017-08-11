@@ -1,13 +1,14 @@
-package com.cleveroad.nikita_frolov_cr.firebase.repository.firebase;
+package com.cleveroad.nikita_frolov_cr.firebase.provider;
 
 import android.net.Uri;
 
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.LocalPhotoRepository;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoNetwork;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepository;
+import com.cleveroad.nikita_frolov_cr.firebase.network.PhotoNetwork;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepositoryImpl;
+import com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection.PhotoNetworkImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 
 import org.json.JSONException;
@@ -19,41 +20,40 @@ public class PhotoProviderImpl implements PhotoProvider {
     private static final Uri PHOTO_UPDATE_URI = Uri.parse("content://"
             + BuildConfig.APPLICATION_ID + ".photoDB/photo");
 
-    private LocalPhotoRepository mLocalPhotoRepository;
+    private PhotoRepository mPhotoRepository;
     private PhotoNetwork mPhotoNetwork;
 
     public PhotoProviderImpl() {
-        mLocalPhotoRepository = new LocalPhotoRepositoryImpl();
+        mPhotoRepository = new PhotoRepositoryImpl();
         mPhotoNetwork = new PhotoNetworkImpl();
     }
 
     @Override
     public List<Photo> getAllPhotos() {
-        return mLocalPhotoRepository.getPhotos();
+        return mPhotoRepository.getPhotos();
     }
 
     @Override
     public Photo getPhoto(long id) {
-        return mLocalPhotoRepository.getPhoto(id);
+        return mPhotoRepository.getPhoto(id);
     }
 
     @Override
     public void addPhoto(Photo photo) {
-        mLocalPhotoRepository.addPhoto(photo);
+        mPhotoRepository.addPhoto(photo);
         App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
     }
 
     @Override
     public void removePhoto(long id) {
-        mLocalPhotoRepository.removePhoto(id);
+        mPhotoRepository.removePhoto(id);
         App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
     }
 
 
     @Override
     public void uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException {
-        photo = mPhotoNetwork.uploadPhoto(photo);
-        photo.save();
+        mPhotoNetwork.uploadPhoto(photo).save();
         App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
     }
 

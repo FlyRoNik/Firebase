@@ -1,4 +1,4 @@
-package com.cleveroad.nikita_frolov_cr.firebase.view;
+package com.cleveroad.nikita_frolov_cr.firebase.view.preview;
 
 import android.Manifest;
 import android.content.Context;
@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -21,10 +22,9 @@ import android.widget.Toast;
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoProvider;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.DataProvider;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.PhotoProviderImpl;
-import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
+import com.cleveroad.nikita_frolov_cr.firebase.provider.DataProvider;
+import com.cleveroad.nikita_frolov_cr.firebase.provider.PhotoProvider;
+import com.cleveroad.nikita_frolov_cr.firebase.provider.PhotoProviderImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -33,16 +33,17 @@ import org.json.JSONException;
 import java.io.IOException;
 
 public class PhotoPreviewFragment extends Fragment implements LocationListener, View.OnClickListener {
-    public static final String IMAGE_PATH_KEY = "imagePath";
-    public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    public static final String PHOTO_ID_KEY = "photoKey";
-    public static final String NETWORK_REQUEST_OK = "200OK";
+    private static final String IMAGE_PATH_KEY = "imagePath";
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private static final String PHOTO_ID_KEY = "photoKey";
+    private static final String NETWORK_REQUEST_OK = "200OK";
     private static final long FLAG_ONLY_PREVIEW = -1;
-    public static final String ONLY_PREVIEW_KEY = "onlyPreview";
+    private static final String ONLY_PREVIEW_KEY = "onlyPreview";
+    private static final String PREVIEW_PHOTO_NAME = "PreviewPhoto";
 
     private enum TypeMethod {
         PROVIDER_ADD_PHOTO,
-        PROVIDER_UPLOAD_PHOTO;
+        PROVIDER_UPLOAD_PHOTO
     }
 
     private Button bUploadPhoto;
@@ -56,8 +57,8 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         if (mLoadLocation) {
             if (!getArguments().containsKey(PHOTO_ID_KEY)) {
                 mPhoto = new Photo();
-                String imagePath = getArguments().getString(IMAGE_PATH_KEY);
-                mPhoto.setPhotoPath(imagePath);
+                Uri photoUri = Uri.parse(getArguments().getString(IMAGE_PATH_KEY));
+                mPhoto.setPhotoUri(photoUri);
             } else {
                 mPhoto = DataProvider.getPhotoProvider().getPhoto(getArguments().getLong(PHOTO_ID_KEY));
             }
@@ -70,27 +71,27 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
 
     @Override
     public void onStatusChanged(String s, int i, Bundle bundle) {
-
+        // Do nothing
     }
 
     @Override
     public void onProviderEnabled(String s) {
-
+        // Do nothing
     }
 
     @Override
     public void onProviderDisabled(String s) {
-
+        // Do nothing
     }
 
-    public static PhotoPreviewFragment newInstance(String path) {
-        return newInstance(path, 0);
+    public static PhotoPreviewFragment newInstance(Uri uri) {
+        return newInstance(uri, 0);
     }
 
-    public static PhotoPreviewFragment newInstance(String path, long id) {
+    public static PhotoPreviewFragment newInstance(Uri uri, long id) {
         PhotoPreviewFragment fragment = new PhotoPreviewFragment();
         Bundle args = new Bundle();
-        args.putString(IMAGE_PATH_KEY, path);
+        args.putString(IMAGE_PATH_KEY, uri.toString());
         if (id > 0) {
             args.putLong(PHOTO_ID_KEY, id);
         }else {
@@ -106,7 +107,7 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_photo_preview, container, false);
-        getActivity().setTitle("PreviewPhoto");
+        getActivity().setTitle(PREVIEW_PHOTO_NAME);
         setHasOptionsMenu(true);
 
         bUploadPhoto = view.findViewById(R.id.bUploadPhoto);
@@ -122,7 +123,8 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         }
 
         String imagePath = getArguments().getString(IMAGE_PATH_KEY);
-        ((ImageView) view.findViewById(R.id.ivPreviewPhoto)).setImageBitmap(ImageHelper.getBitMapFromPath(imagePath));
+
+        ((ImageView) view.findViewById(R.id.ivPreviewPhoto)).setImageURI(Uri.parse(imagePath));
 
         return view;
     }
@@ -155,23 +157,19 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.bUploadPhoto:
-                new ProviderAsyncTask(TypeMethod.PROVIDER_UPLOAD_PHOTO).execute(mPhoto);
-                getFragmentManager().popBackStackImmediate();
-                break;
-            default:
+        if (view.getId() == R.id.bUploadPhoto) {
+            new ProviderAsyncTask(TypeMethod.PROVIDER_UPLOAD_PHOTO).execute(mPhoto);
+            getFragmentManager().popBackStackImmediate();
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                getFragmentManager().popBackStackImmediate();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {
+            getFragmentManager().popBackStackImmediate();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -206,8 +204,7 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             if (!s.equals(NETWORK_REQUEST_OK)) {
-                Toast.makeText(App.get(), s, Toast.LENGTH_SHORT)
-                        .show();
+                Toast.makeText(App.get(), s, Toast.LENGTH_SHORT).show();
             }
         }
     }

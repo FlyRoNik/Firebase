@@ -4,7 +4,7 @@ import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 
 import java.util.List;
 
-public interface LocalPhotoRepository {
+public interface PhotoRepository {
 
     Long addPhoto(Photo photo);
 

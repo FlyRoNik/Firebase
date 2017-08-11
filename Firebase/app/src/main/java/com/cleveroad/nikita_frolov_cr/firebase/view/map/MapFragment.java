@@ -1,4 +1,4 @@
-package com.cleveroad.nikita_frolov_cr.firebase.view;
+package com.cleveroad.nikita_frolov_cr.firebase.view.map;
 
 import android.Manifest;
 import android.content.Context;
@@ -20,8 +20,9 @@ import android.widget.Toast;
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.firebase.DataProvider;
-import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
+import com.cleveroad.nikita_frolov_cr.firebase.provider.DataProvider;
+import com.cleveroad.nikita_frolov_cr.firebase.util.InterfaceNotImplement;
+import com.cleveroad.nikita_frolov_cr.firebase.view.main.PhotoFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -58,7 +59,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
         if (context instanceof PhotoFragment.OnFragmentPhotoListener) {
             mListener = (PhotoFragment.OnFragmentPhotoListener) context;
         } else {
-            throw new RuntimeException(context.toString()
+            throw new InterfaceNotImplement(context.toString()
                     + " must implement " + PhotoFragment.OnFragmentPhotoListener.class.getSimpleName());
         }
     }
@@ -84,6 +85,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
         } catch (Exception e) {
             Toast.makeText(App.get(), e.getMessage(), Toast.LENGTH_SHORT)
                     .show();
+//            Snackbar
         }
 
         mMapView.getMapAsync(mMap -> {
@@ -118,7 +120,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
                 mClusterManager.addItem(photo);
             }
 
-            if (mPhotos.size() != 0) {
+            if (!mPhotos.isEmpty()) {
                 CameraPosition cameraPosition = new CameraPosition.Builder().
                         target(mPhotos.get(mPhotos.size() - 1).getPosition()).zoom(5).build();
                 mGoogleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
@@ -182,22 +184,21 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
 
     @Override
     public void onLoaderReset(Loader<List<Photo>> loader) {
-
+        // Do nothing
     }
 
     @Override
     public void onClusterItemInfoWindowClick(Photo photo) {
-        mListener.goToPreviewFragment(photo.getPhotoPath(), FLAG_ONLY_PREVIEW);
+        mListener.goToPreviewFragment(photo.getPhotoUri(), FLAG_ONLY_PREVIEW);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                getFragmentManager().popBackStackImmediate();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {
+            getFragmentManager().popBackStackImmediate();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -212,7 +213,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
         @Override
         public View getInfoWindow(Marker marker) {
             ImageView ivPhotoInfoWindow = mContentsView.findViewById(R.id.ivPhotoInfoWindow);
-            ivPhotoInfoWindow.setImageBitmap(ImageHelper.getBitMapFromPath(clickedClusterItem.getPhotoPath()));
+            ivPhotoInfoWindow.setImageURI(clickedClusterItem.getPhotoUri());
 
             TextView tvTitle = mContentsView.findViewById(R.id.tvTitle);
             tvTitle.setText(clickedClusterItem.getTitle());

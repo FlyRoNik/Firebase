@@ -1,5 +1,7 @@
 package com.cleveroad.nikita_frolov_cr.firebase.model;
 
+import android.net.Uri;
+
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
@@ -9,9 +11,9 @@ import com.google.maps.android.clustering.ClusterItem;
 
 @Table(name = "photo")
 public class Photo extends Model implements ClusterItem {
-    @Column(name = "photoPath")
+    @Column(name = "photoUri")
     @Expose
-    private String photoPath;
+    private String photoUri;
 
     @Column(name = "latitude")
     @Expose
@@ -43,12 +45,12 @@ public class Photo extends Model implements ClusterItem {
         this.snippet = snippet;
     }
 
-    public String getPhotoPath() {
-        return photoPath;
+    public Uri getPhotoUri() {
+        return Uri.parse(photoUri);
     }
 
-    public void setPhotoPath(String photoPath) {
-        this.photoPath = photoPath;
+    public void setPhotoUri(Uri photoPath) {
+        this.photoUri = photoPath.toString();
     }
 
     public LatLng getLatitude() {
@@ -89,5 +91,40 @@ public class Photo extends Model implements ClusterItem {
     @Override
     public String getSnippet() {
         return snippet;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Photo photo = (Photo) o;
+
+        if (Double.compare(photo.latitude, latitude) != 0) return false;
+        if (Double.compare(photo.longitude, longitude) != 0) return false;
+        if (photoUri != null ? !photoUri.equals(photo.photoUri) : photo.photoUri != null)
+            return false;
+        if (idLink != null ? !idLink.equals(photo.idLink) : photo.idLink != null) return false;
+        if (link != null ? !link.equals(photo.link) : photo.link != null) return false;
+        if (title != null ? !title.equals(photo.title) : photo.title != null) return false;
+        return snippet != null ? snippet.equals(photo.snippet) : photo.snippet == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        long temp;
+        result = 31 * result + (photoUri != null ? photoUri.hashCode() : 0);
+        temp = Double.doubleToLongBits(latitude);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(longitude);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (idLink != null ? idLink.hashCode() : 0);
+        result = 31 * result + (link != null ? link.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (snippet != null ? snippet.hashCode() : 0);
+        return result;
     }
 }

@@ -1,14 +1,13 @@
-package com.cleveroad.nikita_frolov_cr.firebase.repository.firebase;
+package com.cleveroad.nikita_frolov_cr.firebase.repository;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Model;
 import com.activeandroid.query.Select;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.LocalPhotoRepository;
 
 import java.util.List;
 
-public class LocalPhotoRepositoryImpl implements LocalPhotoRepository{
+public class PhotoRepositoryImpl implements PhotoRepository {
 
     @Override
     public Long addPhoto(Photo photo) {

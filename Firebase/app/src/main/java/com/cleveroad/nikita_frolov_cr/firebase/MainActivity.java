@@ -1,16 +1,17 @@
 package com.cleveroad.nikita_frolov_cr.firebase;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import com.cleveroad.nikita_frolov_cr.firebase.view.MapFragment;
-import com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment;
-import com.cleveroad.nikita_frolov_cr.firebase.view.PhotoPreviewFragment;
+import com.cleveroad.nikita_frolov_cr.firebase.view.map.MapFragment;
+import com.cleveroad.nikita_frolov_cr.firebase.view.main.PhotoFragment;
+import com.cleveroad.nikita_frolov_cr.firebase.view.preview.PhotoPreviewFragment;
 
-import static com.cleveroad.nikita_frolov_cr.firebase.view.PhotoFragment.OnFragmentPhotoListener;
+import static com.cleveroad.nikita_frolov_cr.firebase.view.main.PhotoFragment.OnFragmentPhotoListener;
 
 public class MainActivity extends AppCompatActivity implements OnFragmentPhotoListener {
 
@@ -18,8 +19,6 @@ public class MainActivity extends AppCompatActivity implements OnFragmentPhotoLi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-//        deleteDatabase("photoDB");
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.tToolbar);
         setSupportActionBar(toolbar);
@@ -31,34 +30,30 @@ public class MainActivity extends AppCompatActivity implements OnFragmentPhotoLi
         }
 
         if(savedInstanceState == null){
-            goToFragment(PhotoFragment.newInstance(),
-                    PhotoFragment.class.getSimpleName());
+            goToFragment(PhotoFragment.newInstance());
         }
     }
 
     @Override
-    public void goToPreviewFragment(String path) {
-        goToFragment(PhotoPreviewFragment.newInstance(path),
-                PhotoPreviewFragment.class.getSimpleName());
+    public void goToPreviewFragment(Uri uri) {
+        goToFragment(PhotoPreviewFragment.newInstance(uri));
     }
 
     @Override
-    public void goToPreviewFragment(String path, long id) {
-        goToFragment(PhotoPreviewFragment.newInstance(path, id),
-                PhotoPreviewFragment.class.getSimpleName());
+    public void goToPreviewFragment(Uri uri, long id) {
+        goToFragment(PhotoPreviewFragment.newInstance(uri, id));
     }
 
     @Override
     public void goToMapFragment() {
-        goToFragment(MapFragment.newInstance(),
-                MapFragment.class.getSimpleName());
+        goToFragment(MapFragment.newInstance());
     }
 
-    private void goToFragment(Fragment fragment, String tag) {
+    private void goToFragment(Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.llContainer, fragment)
-                .addToBackStack(tag)
+                .replace(R.id.llContainer, fragment, fragment.getClass().getSimpleName())
+                .addToBackStack(fragment.getClass().getSimpleName())
                 .commit();
     }
 }

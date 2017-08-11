@@ -2,7 +2,7 @@
 <resources>
     <dimen name="fAB_margin">16dp</dimen>
     <dimen name="photo_item_image_view_height">200dp</dimen>
-    <dimen name="photo_item_image_margin">5dp</dimen>
+    <dimen name="photo_item_image_margin">2dp</dimen>
     <dimen name="photo_preview_image_view_margin">10dp</dimen>
     <dimen name="photo_info_window_padding">20dp</dimen>
     <dimen name="info_window_image_size">70dp</dimen>
