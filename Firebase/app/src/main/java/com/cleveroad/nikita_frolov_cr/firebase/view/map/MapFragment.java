@@ -15,13 +15,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.cleveroad.nikita_frolov_cr.firebase.App;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.provider.DataProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.util.InterfaceNotImplement;
+import com.cleveroad.nikita_frolov_cr.firebase.util.LOG;
 import com.cleveroad.nikita_frolov_cr.firebase.view.main.PhotoFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -43,7 +46,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
     private GoogleMap mGoogleMap;
     private List<Photo> mPhotos;
     private ClusterManager<Photo> mClusterManager;
-    private Photo clickedClusterItem;
+    private Photo mClickedClusterItem;
     private PhotoFragment.OnFragmentPhotoListener mListener;
 
     public static MapFragment newInstance() {
@@ -83,9 +86,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
         try {
             MapsInitializer.initialize(getActivity().getApplicationContext());
         } catch (Exception e) {
-            Toast.makeText(App.get(), e.getMessage(), Toast.LENGTH_SHORT)
-                    .show();
-//            Snackbar
+            LOG.e(e);
         }
 
         mMapView.getMapAsync(mMap -> {
@@ -104,7 +105,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
 
             mClusterManager
                     .setOnClusterItemClickListener(photo -> {
-                        clickedClusterItem = photo;
+                        mClickedClusterItem = photo;
                         return false;
                     });
 
@@ -213,13 +214,37 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
         @Override
         public View getInfoWindow(Marker marker) {
             ImageView ivPhotoInfoWindow = mContentsView.findViewById(R.id.ivPhotoInfoWindow);
-            ivPhotoInfoWindow.setImageURI(clickedClusterItem.getPhotoUri());
+
+            Glide.with(getContext())
+                    .load(mClickedClusterItem.getLink())
+                    .placeholder(R.drawable.places_ic_clear)
+                    .listener(new RequestListener<String, GlideDrawable>() {
+                        @Override
+                        public boolean onException(Exception e, String model,
+                                                   Target<GlideDrawable> target,
+                                                   boolean isFirstResource) {
+                            if (e != null) {
+                                LOG.e(e);
+                            }
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(GlideDrawable resource, String model,
+                                                       Target<GlideDrawable> target,
+                                                       boolean isFromMemoryCache,
+                                                       boolean isFirstResource) {
+                            if(!isFromMemoryCache) marker.showInfoWindow();
+                            return false;
+                        }
+                    })
+                    .into(ivPhotoInfoWindow);
 
             TextView tvTitle = mContentsView.findViewById(R.id.tvTitle);
-            tvTitle.setText(clickedClusterItem.getTitle());
+            tvTitle.setText(mClickedClusterItem.getTitle());
 
             TextView tvSnippet = mContentsView.findViewById(R.id.tvSnippet);
-            tvSnippet.setText(clickedClusterItem.getTitle());
+            tvSnippet.setText(mClickedClusterItem.getSnippet());
 
             return mContentsView;
         }

@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
@@ -33,7 +34,7 @@ import org.json.JSONException;
 import java.io.IOException;
 
 public class PhotoPreviewFragment extends Fragment implements LocationListener, View.OnClickListener {
-    private static final String IMAGE_PATH_KEY = "imagePath";
+    private static final String IMAGE_URI_KEY = "imagePath";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private static final String PHOTO_ID_KEY = "photoKey";
     private static final String NETWORK_REQUEST_OK = "200OK";
@@ -57,7 +58,7 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         if (mLoadLocation) {
             if (!getArguments().containsKey(PHOTO_ID_KEY)) {
                 mPhoto = new Photo();
-                Uri photoUri = Uri.parse(getArguments().getString(IMAGE_PATH_KEY));
+                Uri photoUri = Uri.parse(getArguments().getString(IMAGE_URI_KEY));
                 mPhoto.setPhotoUri(photoUri);
             } else {
                 mPhoto = DataProvider.getPhotoProvider().getPhoto(getArguments().getLong(PHOTO_ID_KEY));
@@ -91,7 +92,7 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     public static PhotoPreviewFragment newInstance(Uri uri, long id) {
         PhotoPreviewFragment fragment = new PhotoPreviewFragment();
         Bundle args = new Bundle();
-        args.putString(IMAGE_PATH_KEY, uri.toString());
+        args.putString(IMAGE_URI_KEY, uri.toString());
         if (id > 0) {
             args.putLong(PHOTO_ID_KEY, id);
         }else {
@@ -122,9 +123,14 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
             bUploadPhoto.setVisibility(View.GONE);
         }
 
-        String imagePath = getArguments().getString(IMAGE_PATH_KEY);
+        Uri imageUri = Uri.parse(getArguments().getString(IMAGE_URI_KEY));
 
-        ((ImageView) view.findViewById(R.id.ivPreviewPhoto)).setImageURI(Uri.parse(imagePath));
+        ImageView ivPreviewPhoto = view.findViewById(R.id.ivPreviewPhoto);
+
+        Glide.with(getContext())
+                .load(imageUri)
+                .placeholder(R.drawable.places_ic_clear)
+                .into(ivPreviewPhoto);
 
         return view;
     }

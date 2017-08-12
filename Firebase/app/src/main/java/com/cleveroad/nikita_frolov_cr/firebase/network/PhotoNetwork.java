@@ -8,5 +8,5 @@ import org.json.JSONException;
 import java.io.IOException;
 
 public interface PhotoNetwork {
-    Photo uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException;
+    String uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException;
 }

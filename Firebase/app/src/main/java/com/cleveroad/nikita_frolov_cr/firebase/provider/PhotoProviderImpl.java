@@ -1,10 +1,13 @@
 package com.cleveroad.nikita_frolov_cr.firebase.provider;
 
 import android.net.Uri;
+import android.text.TextUtils;
 
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
+import com.cleveroad.nikita_frolov_cr.firebase.network.ImageNetwork;
+import com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection.ImageNetworkImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepository;
 import com.cleveroad.nikita_frolov_cr.firebase.network.PhotoNetwork;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepositoryImpl;
@@ -22,10 +25,12 @@ public class PhotoProviderImpl implements PhotoProvider {
 
     private PhotoRepository mPhotoRepository;
     private PhotoNetwork mPhotoNetwork;
+    private ImageNetwork mImageNetwork;
 
     public PhotoProviderImpl() {
         mPhotoRepository = new PhotoRepositoryImpl();
         mPhotoNetwork = new PhotoNetworkImpl();
+        mImageNetwork = new ImageNetworkImpl();
     }
 
     @Override
@@ -53,8 +58,14 @@ public class PhotoProviderImpl implements PhotoProvider {
 
     @Override
     public void uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException {
-        mPhotoNetwork.uploadPhoto(photo).save();
-        App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
+        String link = mImageNetwork.uploadImage(photo.getPhotoUri());
+        if (!TextUtils.isEmpty(link)) {
+            photo.setLink(link);
+            String idLink = mPhotoNetwork.uploadPhoto(photo);
+            photo.setIdLink(idLink);
+            photo.save();
+            App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
+        }
     }
 
 

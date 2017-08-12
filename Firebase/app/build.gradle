@@ -3,7 +3,7 @@ apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.0"
+    buildToolsVersion "26.0.1"
     defaultConfig {
         applicationId "com.cleveroad.nikita_frolov_cr.firebase"
         minSdkVersion 19
@@ -31,23 +31,22 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
-
-    compile 'com.google.firebase:firebase-auth:10.0.1'
-    compile 'com.google.firebase:firebase-database:10.0.1'
-
-    compile 'com.google.android.gms:play-services-maps:10.0.1'
-    compile 'com.google.android.gms:play-services-places:10.0.1'
-
-    compile 'com.google.code.gson:gson:2.3.1'
-
-    compile 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
-
     compile 'com.android.support:support-v4:26.+'
     compile 'com.android.support:design:26.+'
 
+    compile 'com.google.firebase:firebase-auth:11.0.4'
+    compile 'com.google.firebase:firebase-database:11.0.4'
+    compile 'com.google.android.gms:play-services-maps:11.0.4'
+    compile 'com.google.android.gms:play-services-places:11.0.4'
     compile 'com.google.maps.android:android-maps-utils:0.4+'
+    compile 'com.google.code.gson:gson:2.7'
+
+    compile 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
 
     compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile ("com.github.bumptech.glide:recyclerview-integration:4.0.0") {
+        transitive = false
+    }
 
     testCompile 'junit:junit:4.12'
 }

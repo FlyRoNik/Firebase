@@ -4,19 +4,19 @@ import android.util.Log;
 
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 
-class LOG {
+public class LOG {
     private LOG() {
     }
 
-    static void e(Throwable throwable) {
+    public static void e(Throwable throwable) {
         if (BuildConfig.DEBUG) {
-            Log.e("sds", throwable.getMessage());
+            Log.e("FirebaseException: ", throwable.getMessage());
         }
     }
 
     public static void d(String str) {
         if (BuildConfig.DEBUG) {
-            Log.d("sds", str);
+            Log.d("FirebaseDebug: ", str);
         }
     }
 }

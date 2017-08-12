@@ -1,6 +1,8 @@
 package com.cleveroad.nikita_frolov_cr.firebase.view.main;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -9,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 
@@ -18,11 +21,15 @@ import java.util.List;
 
 class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder> implements
         PhotoFragment.OnItemClickListener {
+    private static final long FLAG_ONLY_PREVIEW = -1;
+
     private List<Photo> mPhotos;
     private WeakReference<OnAdapterClickListener> mListenerReference;
+    private Context context;
 
-    PhotoRVAdapter(@NonNull OnAdapterClickListener listener) {
+    PhotoRVAdapter(@NonNull OnAdapterClickListener listener, Context context) {
         this.mPhotos = new ArrayList<>();
+        this.context = context;
         mListenerReference = new WeakReference<>(listener);
     }
 
@@ -47,7 +54,15 @@ class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder
     @Override
     public void onBindViewHolder(PhotoViewHolder holder, int position) {
         Photo photo = mPhotos.get(position);
-        holder.bindPhoto(photo);
+        if (!TextUtils.isEmpty(photo.getLink())) {
+            Glide.with(context)
+                    .load(photo.getLink())
+                    .placeholder(R.drawable.places_ic_clear)
+                    .into(holder.ivPhoto);
+        } else {
+            holder.ivPhoto.setImageDrawable(ContextCompat.
+                    getDrawable(context, R.drawable.places_ic_clear));
+        }
     }
 
     @Override
@@ -63,12 +78,16 @@ class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder
     public void onClick(int position) {
         if (mListenerReference != null && mListenerReference.get() != null) {
             Photo photo = mPhotos.get(position);
-            mListenerReference.get().onClick(photo.getPhotoUri(), photo.getId());
+            if (TextUtils.isEmpty(photo.getLink())) {
+                mListenerReference.get().onClick(photo.getPhotoUri(), photo.getId());
+            } else {
+                mListenerReference.get().onClick(photo.getPhotoUri(), FLAG_ONLY_PREVIEW);
+            }
         }
     }
 
     static class PhotoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private ImageView ivPhoto;
+        ImageView ivPhoto;
         private PhotoFragment.OnItemClickListener mListener;
 
         PhotoViewHolder(View itemView, PhotoFragment.OnItemClickListener listener) {
@@ -79,18 +98,9 @@ class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder
             itemView.setOnClickListener(this);
         }
 
-        void bindPhoto(Photo photo) {
-            ivPhoto.setImageURI(photo.getPhotoUri());
-            if(TextUtils.isEmpty(photo.getLink())){
-                ivPhoto.setAlpha(0.5f);
-            }else {
-                ivPhoto.setAlpha(1f);
-            }
-        }
-
         @Override
         public void onClick(View view) {
-            if (mListener != null && ivPhoto.getAlpha() != 1f) {
+            if (mListener != null) {
                 mListener.onClick(getAdapterPosition());
             }
         }

@@ -30,6 +30,7 @@ import android.view.ViewGroup;
 import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 import com.cleveroad.nikita_frolov_cr.firebase.R;
+import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.provider.DataProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
 import com.cleveroad.nikita_frolov_cr.firebase.util.InterfaceNotImplement;
@@ -41,7 +42,7 @@ import java.util.List;
 import static android.app.Activity.RESULT_OK;
 
 public class PhotoFragment extends Fragment implements View.OnClickListener,
-        LoaderManager.LoaderCallbacks<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>>,
+        LoaderManager.LoaderCallbacks<List<Photo>>,
         OnAdapterClickListener {
 
     private static final int REQUEST_TAKE_PHOTO = 1;
@@ -100,7 +101,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         setHasOptionsMenu(true);
 
         RecyclerView rvPhotos = view.findViewById(R.id.rvPhotos);
-        mPhotoRVAdapter = new PhotoRVAdapter(this);
+        mPhotoRVAdapter = new PhotoRVAdapter(this, getContext());
         rvPhotos.setLayoutManager(new GridLayoutManager(getContext(), COLUMN_COUNT));
         rvPhotos.setAdapter(mPhotoRVAdapter);
 
@@ -192,9 +193,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
                 Manifest.permission.CAMERA);
         if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.CAMERA,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.MEDIA_CONTENT_CONTROL},
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
             return;
         }
@@ -216,17 +215,17 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
     }
 
     @Override
-    public Loader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> onCreateLoader(int id, Bundle args) {
+    public Loader<List<Photo>> onCreateLoader(int id, Bundle args) {
         return new PhotosATLoader(getContext());
     }
 
     @Override
-    public void onLoadFinished(Loader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> loader, List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo> data) {
+    public void onLoadFinished(Loader<List<Photo>> loader, List<Photo> data) {
         mPhotoRVAdapter.setPhotos(data);
     }
 
     @Override
-    public void onLoaderReset(Loader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> loader) {
+    public void onLoaderReset(Loader<List<Photo>> loader) {
         //Do nothing
     }
 
@@ -235,13 +234,13 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         mListener.goToPreviewFragment(imageUri, id);
     }
 
-    private static class PhotosATLoader extends AsyncTaskLoader<List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo>> {
+    private static class PhotosATLoader extends AsyncTaskLoader<List<Photo>> {
         PhotosATLoader(Context context) {
             super(context);
         }
 
         @Override
-        public List<com.cleveroad.nikita_frolov_cr.firebase.model.Photo> loadInBackground() {
+        public List<Photo> loadInBackground() {
             return DataProvider.getPhotoProvider().getAllPhotos();
         }
     }
