@@ -18,6 +18,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class PhotoNetworkImpl implements PhotoNetwork {
     private static final String KEY_ID_LINK = "name";
@@ -69,4 +72,49 @@ public class PhotoNetworkImpl implements PhotoNetwork {
             }
         }
     }
+
+    @Override
+    public List<Photo> downloadAllPhotos() throws NetworkException, JSONException, IOException {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(ALL_PHOTO_URI + "photo.json");
+
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setDoInput(true);
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.connect();
+
+            try (InputStream responseStream = connection.getInputStream()) {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(responseStream, "UTF-8"))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line).append("\n");
+                    }
+                    List<Photo> photos = new ArrayList<>();
+
+                    JSONObject photosJson = new JSONObject(response.toString());
+                    Iterator<String> keys = photosJson.keys();
+                    Gson gson = new Gson();
+                    while(keys.hasNext()) {
+                        String key = keys.next();
+                        JSONObject photoJson = photosJson.getJSONObject(key);
+                        Photo photo = gson.fromJson(photoJson.toString(), Photo.class);
+                        photo.setIdLink(key);
+                        photos.add(photo);
+                    }
+
+                    return photos;
+                }
+            }
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+
 }

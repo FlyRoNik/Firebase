@@ -7,8 +7,9 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import com.cleveroad.nikita_frolov_cr.firebase.view.map.MapFragment;
+import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.view.main.PhotoFragment;
+import com.cleveroad.nikita_frolov_cr.firebase.view.map.MapFragment;
 import com.cleveroad.nikita_frolov_cr.firebase.view.preview.PhotoPreviewFragment;
 
 import static com.cleveroad.nikita_frolov_cr.firebase.view.main.PhotoFragment.OnFragmentPhotoListener;
@@ -40,8 +41,8 @@ public class MainActivity extends AppCompatActivity implements OnFragmentPhotoLi
     }
 
     @Override
-    public void goToPreviewFragment(Uri uri, long id) {
-        goToFragment(PhotoPreviewFragment.newInstance(uri, id));
+    public void goToPreviewFragment(Photo photo, boolean isPreview) {
+        goToFragment(PhotoPreviewFragment.newInstance(photo, isPreview));
     }
 
     @Override

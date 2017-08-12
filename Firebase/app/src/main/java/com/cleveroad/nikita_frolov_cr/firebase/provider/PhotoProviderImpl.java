@@ -7,11 +7,11 @@ import com.cleveroad.nikita_frolov_cr.firebase.App;
 import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.network.ImageNetwork;
-import com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection.ImageNetworkImpl;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepository;
 import com.cleveroad.nikita_frolov_cr.firebase.network.PhotoNetwork;
-import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepositoryImpl;
+import com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection.ImageNetworkImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection.PhotoNetworkImpl;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepository;
+import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepositoryImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 
 import org.json.JSONException;
@@ -19,7 +19,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 
-public class PhotoProviderImpl implements PhotoProvider {
+class PhotoProviderImpl implements PhotoProvider {
     private static final Uri PHOTO_UPDATE_URI = Uri.parse("content://"
             + BuildConfig.APPLICATION_ID + ".photoDB/photo");
 
@@ -55,7 +55,6 @@ public class PhotoProviderImpl implements PhotoProvider {
         App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
     }
 
-
     @Override
     public void uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException {
         String link = mImageNetwork.uploadImage(photo.getPhotoUri());
@@ -68,5 +67,12 @@ public class PhotoProviderImpl implements PhotoProvider {
         }
     }
 
-
+    @Override
+    public void SyncPhotos() throws IOException, NetworkException, JSONException {
+        List<Photo> photosFromCloud = mPhotoNetwork.downloadAllPhotos();
+        List<Photo> photosFromDataBase = mPhotoRepository.getPhotos();
+        photosFromCloud.removeAll(photosFromDataBase);
+        mPhotoRepository.addPhotos(photosFromCloud);
+        App.get().getContentResolver().notifyChange(PHOTO_UPDATE_URI, null);
+    }
 }

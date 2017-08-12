@@ -1,7 +1,6 @@
 package com.cleveroad.nikita_frolov_cr.firebase.repository;
 
 import com.activeandroid.ActiveAndroid;
-import com.activeandroid.Model;
 import com.activeandroid.query.Select;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 
@@ -23,7 +22,9 @@ public class PhotoRepositoryImpl implements PhotoRepository {
     public void addPhotos(List<Photo> photos) {
         ActiveAndroid.beginTransaction();
         try {
-            photos.forEach(Model::save);
+            for (Photo photo : photos) {
+                photo.save();
+            }
             ActiveAndroid.setTransactionSuccessful();
         } finally {
             ActiveAndroid.endTransaction();

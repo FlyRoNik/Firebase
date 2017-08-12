@@ -21,8 +21,6 @@ import java.util.List;
 
 class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder> implements
         PhotoFragment.OnItemClickListener {
-    private static final long FLAG_ONLY_PREVIEW = -1;
-
     private List<Photo> mPhotos;
     private WeakReference<OnAdapterClickListener> mListenerReference;
     private Context context;
@@ -79,9 +77,9 @@ class PhotoRVAdapter extends RecyclerView.Adapter<PhotoRVAdapter.PhotoViewHolder
         if (mListenerReference != null && mListenerReference.get() != null) {
             Photo photo = mPhotos.get(position);
             if (TextUtils.isEmpty(photo.getLink())) {
-                mListenerReference.get().onClick(photo.getPhotoUri(), photo.getId());
+                mListenerReference.get().onClick(photo, false);
             } else {
-                mListenerReference.get().onClick(photo.getPhotoUri(), FLAG_ONLY_PREVIEW);
+                mListenerReference.get().onClick(photo, true);
             }
         }
     }

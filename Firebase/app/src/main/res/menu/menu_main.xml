@@ -3,6 +3,9 @@
     <item
         android:id="@+id/iGoToMap"
         android:title="@string/open_map">
-
+    </item>
+    <item
+        android:id="@+id/iSyncPhoto"
+        android:title="@string/sync_photo">
     </item>
 </menu>

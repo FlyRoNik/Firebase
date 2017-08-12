@@ -9,9 +9,12 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +28,6 @@ import com.cleveroad.nikita_frolov_cr.firebase.R;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.provider.DataProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.provider.PhotoProvider;
-import com.cleveroad.nikita_frolov_cr.firebase.provider.PhotoProviderImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -36,15 +38,17 @@ import java.io.IOException;
 public class PhotoPreviewFragment extends Fragment implements LocationListener, View.OnClickListener {
     private static final String IMAGE_URI_KEY = "imagePath";
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    private static final String PHOTO_ID_KEY = "photoKey";
     private static final String NETWORK_REQUEST_OK = "200OK";
-    private static final long FLAG_ONLY_PREVIEW = -1;
     private static final String ONLY_PREVIEW_KEY = "onlyPreview";
     private static final String PREVIEW_PHOTO_NAME = "PreviewPhoto";
+    private static final String PHOTO_KEY = "photo";
+    private static final String NETWORK_REQUEST_KEY = "networkRequestKey";
+    private static final String PHOTO_ID_KEY = "photoId";
 
     private enum TypeMethod {
         PROVIDER_ADD_PHOTO,
-        PROVIDER_UPLOAD_PHOTO
+        PROVIDER_UPLOAD_PHOTO,
+        PROVIDER_DELETE_PHOTO,
     }
 
     private Button bUploadPhoto;
@@ -56,15 +60,16 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     @Override
     public void onLocationChanged(Location location) {
         if (mLoadLocation) {
-            if (!getArguments().containsKey(PHOTO_ID_KEY)) {
+            if (!getArguments().containsKey(PHOTO_KEY)) {
                 mPhoto = new Photo();
-                Uri photoUri = Uri.parse(getArguments().getString(IMAGE_URI_KEY));
-                mPhoto.setPhotoUri(photoUri);
+                mPhoto.setPhotoUri(Uri.parse(getArguments().getString(IMAGE_URI_KEY)));
             } else {
-                mPhoto = DataProvider.getPhotoProvider().getPhoto(getArguments().getLong(PHOTO_ID_KEY));
+                mPhoto = getArguments().getParcelable(PHOTO_KEY);
             }
             mPhoto.setLatitude(new LatLng(location.getLatitude(), location.getLongitude()));
-            new ProviderAsyncTask(TypeMethod.PROVIDER_ADD_PHOTO).execute(mPhoto);
+            Bundle bundle = new Bundle();
+            bundle.putParcelable(PHOTO_KEY, mPhoto);
+            new ProviderAsyncTask(TypeMethod.PROVIDER_ADD_PHOTO).execute(bundle);
             mLoadLocation = false;
             bUploadPhoto.setEnabled(true);
         }
@@ -85,23 +90,43 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         // Do nothing
     }
 
-    public static PhotoPreviewFragment newInstance(Uri uri) {
-        return newInstance(uri, 0);
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mPhoto != null) {
+            outState.putParcelable(PHOTO_KEY, mPhoto);
+        }
     }
 
-    public static PhotoPreviewFragment newInstance(Uri uri, long id) {
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null && savedInstanceState.containsKey(PHOTO_KEY)) {
+            mPhoto = savedInstanceState.getParcelable(PHOTO_KEY);
+        }
+    }
+
+    public static PhotoPreviewFragment newInstance(Uri uri) {
         PhotoPreviewFragment fragment = new PhotoPreviewFragment();
         Bundle args = new Bundle();
         args.putString(IMAGE_URI_KEY, uri.toString());
-        if (id > 0) {
-            args.putLong(PHOTO_ID_KEY, id);
-        }else {
-            if (id == FLAG_ONLY_PREVIEW) {
-                args.putString(ONLY_PREVIEW_KEY, "onlyPreview");
-            }
-        }
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public static PhotoPreviewFragment newInstance(Photo photo, boolean isPreView) {
+        PhotoPreviewFragment fragment = new PhotoPreviewFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(PHOTO_KEY, photo);
+        args.putBoolean(ONLY_PREVIEW_KEY, isPreView);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mLoadLocation = false;
     }
 
     @Override
@@ -115,22 +140,40 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
         bUploadPhoto.setOnClickListener(this);
         bUploadPhoto.setEnabled(false);
 
-
-        if (!getArguments().containsKey(ONLY_PREVIEW_KEY)) {
-            mLocationManager = (LocationManager) App.get().getSystemService(Context.LOCATION_SERVICE);
-            uploadLocation();
-        } else {
-            bUploadPhoto.setVisibility(View.GONE);
-        }
-
-        Uri imageUri = Uri.parse(getArguments().getString(IMAGE_URI_KEY));
-
         ImageView ivPreviewPhoto = view.findViewById(R.id.ivPreviewPhoto);
 
-        Glide.with(getContext())
-                .load(imageUri)
-                .placeholder(R.drawable.places_ic_clear)
-                .into(ivPreviewPhoto);
+        if (getArguments().getBoolean(ONLY_PREVIEW_KEY)) {
+            bUploadPhoto.setVisibility(View.GONE);
+        } else {
+            mLocationManager = (LocationManager) App.get().getSystemService(Context.LOCATION_SERVICE);
+            uploadLocation();
+        }
+
+        if (getArguments().getBoolean(ONLY_PREVIEW_KEY)) {
+            Photo photo = getArguments().getParcelable(PHOTO_KEY);
+            if (photo != null) {
+                Glide.with(getContext())
+                        .load(photo.getLink())
+                        .placeholder(R.drawable.places_ic_clear)
+                        .into(ivPreviewPhoto);
+            }
+        } else {
+            Uri imageUri;
+            if (getArguments().containsKey(IMAGE_URI_KEY)) {
+                imageUri = Uri.parse(getArguments().getString(IMAGE_URI_KEY));
+            } else {
+                Photo photo = getArguments().getParcelable(PHOTO_KEY);
+                if (photo != null) {
+                    imageUri = photo.getPhotoUri();
+                } else {
+                    return view;
+                }
+            }
+            Glide.with(getContext())
+                    .load(imageUri)
+                    .placeholder(R.drawable.places_ic_clear)
+                    .into(ivPreviewPhoto);
+        }
 
         return view;
     }
@@ -148,15 +191,9 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        mLoadLocation = false;
-    }
-
-    @Override
     public void onDetach() {
         super.onDetach();
-        if (!getArguments().containsKey(ONLY_PREVIEW_KEY)) {
+        if (!getArguments().getBoolean(ONLY_PREVIEW_KEY)) {
             mLocationManager.removeUpdates(this);
         }
     }
@@ -164,53 +201,88 @@ public class PhotoPreviewFragment extends Fragment implements LocationListener, 
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.bUploadPhoto) {
-            new ProviderAsyncTask(TypeMethod.PROVIDER_UPLOAD_PHOTO).execute(mPhoto);
+            Bundle bundle = new Bundle();
+            bundle.putParcelable(PHOTO_KEY, mPhoto);
+            new ProviderAsyncTask(TypeMethod.PROVIDER_UPLOAD_PHOTO).execute(bundle);
             getFragmentManager().popBackStackImmediate();
         }
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            getFragmentManager().popBackStackImmediate();
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        if (getArguments().containsKey(PHOTO_KEY)) {
+            inflater.inflate(R.menu.menu_preview, menu);
         }
     }
 
-    private static class ProviderAsyncTask extends AsyncTask<Photo, Void, String> {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_delete:
+                Bundle bundle = new Bundle();
+                Photo photo = getArguments().getParcelable(PHOTO_KEY);
+                if (photo != null) {
+                    bundle.putLong(PHOTO_ID_KEY, photo.getId());
+                }
+                new ProviderAsyncTask(TypeMethod.PROVIDER_DELETE_PHOTO).execute(bundle);
+                getFragmentManager().popBackStackImmediate();
+                return true;
+            case android.R.id.home:
+                getFragmentManager().popBackStackImmediate();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private class ProviderAsyncTask extends AsyncTask<Bundle, Void, Bundle> {
         private TypeMethod mTypeMethod;
         private PhotoProvider mPhotoProvider;
 
         ProviderAsyncTask(TypeMethod typeMethod) {
             mTypeMethod = typeMethod;
-            mPhotoProvider = new PhotoProviderImpl();
+            mPhotoProvider = DataProvider.getPhotoProvider();
         }
 
         @Override
-        protected String doInBackground(Photo... photos) {
-            try {
+        protected Bundle doInBackground(Bundle... bundles) {
+            Bundle bundle = new Bundle();
+            if (bundles[0] != null) {
                 switch (mTypeMethod) {
                     case PROVIDER_ADD_PHOTO:
-                        mPhotoProvider.addPhoto(photos[0]);
-                        break;
+                        mPhotoProvider.addPhoto(bundles[0].getParcelable(PHOTO_KEY));
+                        return Bundle.EMPTY;
                     case PROVIDER_UPLOAD_PHOTO:
-                        mPhotoProvider.uploadPhoto(photos[0]);
+                        try {
+                            mPhotoProvider.uploadPhoto(bundles[0].getParcelable(PHOTO_KEY));
+                            bundle.putString(NETWORK_REQUEST_KEY, NETWORK_REQUEST_OK);
+                        } catch (NetworkException | JSONException | IOException e) {
+                            bundle.putString(NETWORK_REQUEST_KEY, e.getMessage());
+                        }
+                        return bundle;
+                    case PROVIDER_DELETE_PHOTO:
+                        mPhotoProvider.removePhoto(bundles[0].getLong(PHOTO_ID_KEY));
+                        return Bundle.EMPTY;
+                    default:
+                        return Bundle.EMPTY;
+                }
+            }
+            return Bundle.EMPTY;
+        }
+
+        @Override
+        protected void onPostExecute(Bundle bundle) {
+            super.onPostExecute(bundle);
+            if (bundle != Bundle.EMPTY) {
+                switch (mTypeMethod) {
+                    case PROVIDER_UPLOAD_PHOTO:
+                        String request = bundle.getString(NETWORK_REQUEST_KEY);
+                        if (request != null && !request.equals(NETWORK_REQUEST_OK)) {
+                            Toast.makeText(App.get(), request, Toast.LENGTH_SHORT).show();
+                        }
                         break;
                     default:
                 }
-            } catch (NetworkException | JSONException | IOException e) {
-                return e.getMessage();
-            }
-            return NETWORK_REQUEST_OK;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            if (!s.equals(NETWORK_REQUEST_OK)) {
-                Toast.makeText(App.get(), s, Toast.LENGTH_SHORT).show();
             }
         }
     }

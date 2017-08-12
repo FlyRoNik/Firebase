@@ -1,6 +1,8 @@
 package com.cleveroad.nikita_frolov_cr.firebase.model;
 
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
@@ -10,9 +12,9 @@ import com.google.gson.annotations.Expose;
 import com.google.maps.android.clustering.ClusterItem;
 
 @Table(name = "photo")
-public class Photo extends Model implements ClusterItem {
+public class Photo extends Model implements ClusterItem, Parcelable{
     @Column(name = "photoUri")
-    @Expose
+    @Expose(deserialize = false, serialize = false)
     private String photoUri;
 
     @Column(name = "latitude")
@@ -36,6 +38,31 @@ public class Photo extends Model implements ClusterItem {
 
     @Expose(deserialize = false, serialize = false)
     private String snippet;
+
+    public Photo() {
+    }
+
+    public Photo(Parcel in) {
+        photoUri = in.readString();
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        idLink = in.readString();
+        link = in.readString();
+        title = in.readString();
+        snippet = in.readString();
+    }
+
+    public static final Creator<Photo> CREATOR = new Creator<Photo>() {
+        @Override
+        public Photo createFromParcel(Parcel in) {
+            return new Photo(in);
+        }
+
+        @Override
+        public Photo[] newArray(int size) {
+            return new Photo[size];
+        }
+    };
 
     public void setTitle(String title) {
         this.title = title;
@@ -97,7 +124,7 @@ public class Photo extends Model implements ClusterItem {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+//        if (!super.equals(o)) return false; TODO question
 
         Photo photo = (Photo) o;
 
@@ -106,16 +133,14 @@ public class Photo extends Model implements ClusterItem {
         if (photoUri != null ? !photoUri.equals(photo.photoUri) : photo.photoUri != null)
             return false;
         if (idLink != null ? !idLink.equals(photo.idLink) : photo.idLink != null) return false;
-        if (link != null ? !link.equals(photo.link) : photo.link != null) return false;
-        if (title != null ? !title.equals(photo.title) : photo.title != null) return false;
-        return snippet != null ? snippet.equals(photo.snippet) : photo.snippet == null;
-
+        return link != null ? link.equals(photo.link) : photo.link == null;
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+//        int result = super.hashCode(); //TODO question
         long temp;
+        int result = 1;
         result = 31 * result + (photoUri != null ? photoUri.hashCode() : 0);
         temp = Double.doubleToLongBits(latitude);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
@@ -123,8 +148,22 @@ public class Photo extends Model implements ClusterItem {
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (idLink != null ? idLink.hashCode() : 0);
         result = 31 * result + (link != null ? link.hashCode() : 0);
-        result = 31 * result + (title != null ? title.hashCode() : 0);
-        result = 31 * result + (snippet != null ? snippet.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(photoUri);
+        parcel.writeDouble(latitude);
+        parcel.writeDouble(longitude);
+        parcel.writeString(idLink);
+        parcel.writeString(link);
+        parcel.writeString(title);
+        parcel.writeString(snippet);
     }
 }

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
@@ -34,6 +35,10 @@ import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.provider.DataProvider;
 import com.cleveroad.nikita_frolov_cr.firebase.util.ImageHelper;
 import com.cleveroad.nikita_frolov_cr.firebase.util.InterfaceNotImplement;
+import com.cleveroad.nikita_frolov_cr.firebase.util.LOG;
+import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
+
+import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
@@ -122,16 +127,21 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu, menu);
+        inflater.inflate(R.menu.menu_main, menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.iGoToMap) {
-            mListener.goToMapFragment();
-            return true;
+        switch (item.getItemId()) {
+            case R.id.iGoToMap:
+                mListener.goToMapFragment();
+                return true;
+            case R.id.iSyncPhoto:
+                new ProviderAsyncTask().execute();
+                return true;
+            default:
+                return false;
         }
-        return false;
     }
 
     @Override
@@ -230,8 +240,8 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
     }
 
     @Override
-    public void onClick(Uri imageUri, long id) {
-        mListener.goToPreviewFragment(imageUri, id);
+    public void onClick(Photo photo, boolean isPreview) {
+        mListener.goToPreviewFragment(photo, isPreview);
     }
 
     private static class PhotosATLoader extends AsyncTaskLoader<List<Photo>> {
@@ -245,10 +255,23 @@ public class PhotoFragment extends Fragment implements View.OnClickListener,
         }
     }
 
+    private static class ProviderAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                DataProvider.getPhotoProvider().SyncPhotos();
+            } catch (IOException | NetworkException | JSONException e) {
+                LOG.e(e);
+            }
+            return null;
+        }
+    }
+
     public interface OnFragmentPhotoListener {
         void goToPreviewFragment(Uri uri);
 
-        void goToPreviewFragment(Uri uri, long id);
+        void goToPreviewFragment(Photo photo, boolean isPreview);
 
         void goToMapFragment();
     }

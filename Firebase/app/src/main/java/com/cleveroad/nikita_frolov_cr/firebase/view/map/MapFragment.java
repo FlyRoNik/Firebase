@@ -190,7 +190,7 @@ public class MapFragment extends Fragment implements LoaderManager.LoaderCallbac
 
     @Override
     public void onClusterItemInfoWindowClick(Photo photo) {
-        mListener.goToPreviewFragment(photo.getPhotoUri(), FLAG_ONLY_PREVIEW);
+        mListener.goToPreviewFragment(photo, true);
     }
 
     @Override

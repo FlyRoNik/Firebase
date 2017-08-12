@@ -19,4 +19,6 @@ public interface PhotoProvider {
     void uploadPhoto(Photo photo) throws NetworkException, JSONException, IOException;
 
     void addPhoto(Photo photo);
+
+    void SyncPhotos() throws IOException, NetworkException, JSONException;
 }
