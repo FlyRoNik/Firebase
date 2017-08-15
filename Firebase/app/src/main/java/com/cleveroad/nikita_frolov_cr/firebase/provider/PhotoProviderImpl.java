@@ -8,8 +8,8 @@ import com.cleveroad.nikita_frolov_cr.firebase.BuildConfig;
 import com.cleveroad.nikita_frolov_cr.firebase.model.Photo;
 import com.cleveroad.nikita_frolov_cr.firebase.network.ImageNetwork;
 import com.cleveroad.nikita_frolov_cr.firebase.network.PhotoNetwork;
-import com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection.ImageNetworkImpl;
-import com.cleveroad.nikita_frolov_cr.firebase.network.urlconnection.PhotoNetworkImpl;
+import com.cleveroad.nikita_frolov_cr.firebase.network.retrofit.ImageRetrofitNetworkImpl;
+import com.cleveroad.nikita_frolov_cr.firebase.network.retrofit.PhotoRetrofitNetworkImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepository;
 import com.cleveroad.nikita_frolov_cr.firebase.repository.PhotoRepositoryImpl;
 import com.cleveroad.nikita_frolov_cr.firebase.util.NetworkException;
@@ -29,8 +29,8 @@ class PhotoProviderImpl implements PhotoProvider {
 
     public PhotoProviderImpl() {
         mPhotoRepository = new PhotoRepositoryImpl();
-        mPhotoNetwork = new PhotoNetworkImpl();
-        mImageNetwork = new ImageNetworkImpl();
+        mPhotoNetwork = new PhotoRetrofitNetworkImpl();
+        mImageNetwork = new ImageRetrofitNetworkImpl();
     }
 
     @Override
